@@ -1,0 +1,67 @@
+for (int dl = 0 ; dl < num_disp ; dl++)
+	{
+		float d = disp_levels_dev[dl];
+		float min_diff = 100000.0;
+		
+		for (int k = 0 ; k < subset_num_dev[tid_z] ; k++)
+		{
+			int curr_cam = view_subset_dev[tid_z * view_num + k];	
+			float curr_diff = 0;
+			
+			if (curr_cam != tid_z)
+			{		
+				int curr_cam_x = curr_cam % array_width;
+				int curr_cam_y = curr_cam / array_width;
+				
+				int3 xy_ref; 
+				xy_ref.x = center_x - 2*step_x;
+				xy_ref.y = center_y - 2*step_y;
+				xy_ref.z = tid_z;
+				
+				int3 xy_proj;
+				xy_proj.z = curr_cam;
+				
+				for (int i = 0 ; i <= 4 ; i++)
+					for (int j = 0 ; j <= 4 ; j++)
+					{
+						xy_ref.x += i*step_x;
+						xy_ref.y += j*step_y;
+						
+						int d_temp = (int)(d);
+						xy_proj.x = (int)(xy_ref.x - d*(float)(curr_cam_x - cam_x) );
+						xy_proj.y = (int)(xy_ref.y - bl_ratio*d*(float)(curr_cam_y - cam_y) ); 
+						
+						if (xy_ref.x  >= 0 && xy_ref.y  >= 0 && xy_ref.x  < img_size.x && xy_ref.y  < img_size.y && 
+							xy_proj.x >= 0 && xy_proj.y >= 0 && xy_proj.x < img_size.x && xy_proj.y < img_size.y)
+						{
+							
+							//float3 color_proj = (float3)(1.0, 1.0, 1.0);
+							float3 color_proj = img_dev[(img_size.x * img_size.y * xy_proj.z) + (img_size.x * xy_proj.y) + xy_proj.x];
+							
+							//barrier(CLK_GLOBAL_MEM_FENCE);
+							
+							//float3 color_ref = (float3)(2.0, 2.0, 2.0);
+							float3 color_ref  = img_dev[(img_size.x * img_size.y * xy_ref.z) + (img_size.x * xy_ref.y) + xy_ref.x];
+							
+							
+							float diff = fabs(color_ref.x - color_proj.x) + fabs(color_ref.y - color_proj.y) + fabs(color_ref.z - color_proj.z);
+							curr_diff += diff;	
+						}
+						else 
+							curr_diff += T;
+					}
+									
+				if (min_diff > curr_diff)
+					min_diff = curr_diff;
+			}
+		}
+		
+		if (min_diff < cost_est)
+		{
+			cost_est = min_diff;
+			disp_est = d;
+		}	
+	}
+	
+	spixel_map_dev[tid_z*height*width + tid_y*width + tid_x].s7 = disp_est;
+	/**/

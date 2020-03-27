@@ -1,0 +1,9 @@
+../Images/Beer-Garden/img0.png
+../Images/Beer-Garden/img1.png
+../Images/Beer-Garden/img2.png
+../Images/Beer-Garden/img3.png
+../Images/Beer-Garden/img4.png
+../Images/Beer-Garden/img5.png
+../Images/Beer-Garden/img6.png
+../Images/Beer-Garden/img7.png
+../Images/Beer-Garden/img8.png

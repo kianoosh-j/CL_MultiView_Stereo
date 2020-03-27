@@ -1,0 +1,158 @@
+int idx = z*map_size.x*map_size.y + y*map_size.x + x;
+
+	vec8f spixl = spixl_map[idx];
+	vec2i center; center.x = spixl.s1; center.y = spixl.s2;
+
+
+	if (center.x < spixel_size)
+		center.x += (spixel_size - center.x);
+
+	if (center.x + spixel_size > img_size.x)
+		center.x -= spixel_size;
+
+	if (center.y < spixel_size)
+		center.y += (spixel_size - center.y);
+
+	if (center.y + spixel_size > img_size.y)
+		center.y -= spixel_size;
+
+
+
+	vec8u dir;
+	dir.s0 = 0; dir.s1 = 0; dir.s2 = 0; dir.s3 = 0; dir.s4 = 0; dir.s5 = 0; dir.s6 = 0; dir.s7 = 0;
+	int base = z * img_size.x * img_size.y;
+
+
+	
+	for (int i = 1 ; i < spixel_size ; i++)
+	{
+		// Check NW
+		if (center.x - i >= 0 && center.y - i >= 0)
+			if (idx == idx_img[base + (center.y - i)*img_size.x + center.x - i])
+				dir.s0 = (uchar)(i - 1);
+
+
+		// Check W
+		if (center.x - i >= 0)
+			if (idx == idx_img[base + center.y*img_size.x + center.x - i])
+				dir.s1 = (uchar)(i - 1);
+
+		// Check SW
+		if (center.x - i >= 0 && center.y + i < img_size.y)
+			if (idx == idx_img[base + (center.y + i)*img_size.x + center.x - i])
+				dir.s2 = (uchar)(i - 1);
+
+		// Check N
+		if (center.y - i >= 0)
+			if (idx == idx_img[base + (center.y - i)*img_size.x + center.x])
+				dir.s3 = (uchar)(i - 1);
+		// Check S
+		if (center.y + i < img_size.y)
+			if (idx == idx_img[base + (center.y + i)*img_size.x + center.x])
+				dir.s4 = (uchar)(i - 1);
+
+		// Check NE
+		if (center.x + i < img_size.x && center.y - i >= 0)
+			if (idx == idx_img[base + (center.y - i)*img_size.x + center.x + i])
+				dir.s5 = (uchar)(i - 1);
+
+		// Check E
+		if (center.x + i < img_size.x)
+			if (idx == idx_img[base + (center.y)*img_size.x + center.x + i])
+				dir.s6 = (uchar)(i - 1);
+
+		// Check SE
+		if (center.x + i < img_size.x && center.y + i < img_size.y )
+			if (idx == idx_img[base + (center.y + i)*img_size.x + center.x + i])
+				dir.s7 = (uchar)(i - 1);
+/**/
+	/**/
+	}
+	
+	spixl_rep[idx] = dir;
+
+	/**
+	int bb_l = max((int)dir.s0, max((int)(dir.s1), (int)(dir.s2) ) );
+	int bb_r = max((int)dir.s5, max((int)(dir.s6), (int)(dir.s7) ) );
+	int bb_t = max((int)dir.s0, max((int)(dir.s3), (int)(dir.s5) ) );
+	int bb_b = max((int)dir.s2, max((int)(dir.s4), (int)(dir.s7) ) );
+
+	int step_x = max(1.0, 0.25*(bb_l + bb_r) );
+	int step_y = max(1.0, 0.25*(bb_t + bb_b) );
+	/**/
+
+	// // FIIIIIIIIIIIIIIIIIIXXXXXXXXXXXXX it later
+	int array_width = 5; 
+	float bl_ratio = 0.625;
+	vec2i step; step.x = 1; step.y = 1;
+
+	// FIIIIIIIIIIIIIIIIIIXXXXXXXXXXXXX it later
+
+	int cam_y = z / array_width;
+	int cam_x = z % array_width;
+
+	float T = 30.0;
+	float cost_est = 1000000.0;
+	float disp_est = 0.0;
+
+	// 
+	float min_diff = 10000.0;
+
+	for (int dl = 0 ; dl < num_disp ; dl++)
+	{
+		float d = disp_levels[dl];
+		
+
+		for (int k = 0 ; k < view_subset_num[z] ; k++)
+		{
+			int cam_check = view_subset_vec[z*view_count + k];
+			float check_diff = 0.0;
+
+			if (cam_check != z)
+			{
+				int check_x = cam_check % array_width;
+				int check_y = cam_check / array_width;
+
+				vec3i xy_ref;
+				xy_ref.x = center.x - 2 * step.x;
+				xy_ref.y = center.y - 2 * step.y;
+				xy_ref.z = z;
+
+				vec3i xy_proj;
+				xy_proj.z = cam_check;
+
+				for (int i = 0 ; i <= 4 ; i++)
+					for (int j = 0 ; j <= 4 ; j++)
+					{
+						xy_ref.x += i*step.x;
+						xy_ref.y += j*step.y;
+
+						xy_proj.x = (int)(xy_ref.x - d*(float)(check_x - cam_x));
+						xy_proj.y = (int)(xy_ref.y - bl_ratio*d*(float)(check_y - cam_y));
+
+						if (xy_ref.x >= 0 && xy_ref.y >= 0 && xy_ref.x < img_size.x && xy_ref.y < img_size.y &&
+							xy_proj.x >= 0 && xy_proj.y >= 0 && xy_proj.x < img_size.x && xy_proj.y < img_size.y)
+						{
+							vec3f color_proj = cvt_img[(img_size.x * img_size.y * xy_proj.z) + (img_size.x * xy_proj.y) + xy_proj.x];
+							vec3f color_ref = cvt_img[(img_size.x * img_size.y * xy_ref.z) + (img_size.x * xy_ref.y) + xy_ref.x];
+
+							float diff = fabs(color_ref.x - color_proj.x) + fabs(color_ref.y - color_proj.y) + fabs(color_ref.z - color_proj.z);
+							check_diff += diff;
+
+						}
+						else
+							check_diff += T;
+					}
+				if (min_diff > check_diff)
+					min_diff = check_diff;
+			}
+		}
+
+		/*if (min_diff < cost_est)
+		{
+			cost_est = min_diff;
+			disp_est = d;
+		}*/
+	}
+
+	spixl_map[idx].s7 = min_diff;

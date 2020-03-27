@@ -1,0 +1,5 @@
+﻿  pipeline.cpp
+p:\civit summer project\5august19\clmvde\clmvde\pipeline.cpp(123): warning C4244: 'argument': conversion from 'int' to 'float', possible loss of data
+p:\civit summer project\5august19\clmvde\clmvde\pipeline.cpp(124): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  clMVDE.vcxproj -> P:\Civit Summer Project\5August19\clMVDE\x64\Debug\clMVDE.exe
+  clMVDE.vcxproj -> P:\Civit Summer Project\5August19\clMVDE\x64\Debug\clMVDE.pdb (Full PDB)

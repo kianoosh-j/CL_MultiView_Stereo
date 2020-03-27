@@ -1,0 +1,20 @@
+27 Nov 2019:
+
+In 7- propagation, change images are effort of restoring the code to normal. Taking away all of the negative experiments.
+change3 is the best one so far without enforce_connectivity, and change4_conne is the best one so far with enforce connectity.
+
+Another good thing which has been done is that in the slic segmentation part, the input arguments to the class constructor
+has significnetly decreased.
+
+change5 is the result of removing effect of the color similarity in the init_smoothness(), compute_smoothness(), update().
+in order to do so, the similarity has been set to 1. The output improves but at the cost of loosing so much details.
+
+28Nov2019:
+
+29Nov2019:
+The Edge Computation code has been compeleted. The first test goes with cvt_alternative() and apply_edge_vale(). The result
+will be stored in change6_alter1 image.
+
+
+
+

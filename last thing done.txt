@@ -1,0 +1,4 @@
+I fixed the pipline and clSLIC classes. It seems that they are runing without runtime error. 
+Next step is to use clSLIC::draw_seg_lines() function to see if it produces the correct results.
+
+The end objective is fixing the segmentation once and for all.
